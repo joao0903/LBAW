@@ -1,0 +1,711 @@
+openapi: 3.0.0
+
+info:
+ version: '1.0'
+ title: 'Feup Times'
+ description: 'Web Resources Specification (A7) for Feup Times'
+
+servers:
+- url: http://lbaw.fe.up.pt
+  description: Production server
+
+externalDocs:
+  description: "Find more info here."
+  url: https://git.fe.up.pt/lbaw/lbaw2324/lbaw2331/-/wikis/eap
+
+tags:
+ - name: 'M01: Authentication and Individual Profile'
+ - name: 'M02: Posts'
+ - name: 'M03: Members'
+ - name: 'M04: Notifications'
+ - name: 'M05: Management Area'
+ - name: 'M06: Static Pages'
+
+paths:
+ # M01: Authentication and Individual Profile
+ /login:
+   get:
+     operationId: R101
+     summary: 'R101: Login Form'
+     description: 'Provide login form. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '200':
+         description: 'Ok. Show Log-in UI'
+   post:
+     operationId: R102
+     summary: 'R102: Login Action'
+     description: 'Processes the login form submission. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+
+     requestBody:
+       required: true
+       content:
+         application/x-www-form-urlencoded:
+           schema:
+             type: object
+             properties:
+               email:          # <!--- form field name
+                 type: string
+               password:    # <!--- form field name
+                 type: string
+             required:
+                  - email
+                  - password
+
+     responses:
+       '302':
+         description: 'Redirect after processing the login credentials.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful authentication. Redirect to user profile.'
+                 value: '/welcome'
+               302Error:
+                 description: 'Failed authentication. Redirect to login form.'
+                 value: '/login'
+
+ /logout:
+
+   post:
+     operationId: R103
+     summary: 'R103: Logout Action'
+     description: 'Logout the current authenticated user. Access: USR'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '302':
+         description: 'Redirect after processing logout.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful logout. Redirect to login form.'
+                 value: '/login'
+
+ /register:
+   get:
+     operationId: R104
+     summary: 'R104: Register Form'
+     description: 'Provide new user registration form. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+     responses:
+       '200':
+         description: 'Ok. Show Sign-Up UI'
+
+   post:
+     operationId: R105
+     summary: 'R105: Register Action'
+     description: 'Processes the new user registration form submission. Access: PUB'
+     tags:
+       - 'M01: Authentication and Individual Profile'
+
+     requestBody:
+       required: true
+       content:
+         application/x-www-form-urlencoded:
+           schema:
+             type: object
+             properties:
+               username:
+                 type: string
+               firstName:
+                 type: string
+               lastName:
+                 type: string
+               email:
+                 type: string
+               image:
+                 type: string
+                 format: binary
+             required:
+                 - email
+                 - password
+
+     responses:
+       '302':
+         description: 'Redirect after processing the new user information.'
+         headers:
+           Location:
+             schema:
+               type: string
+             examples:
+               302Success:
+                 description: 'Successful authentication. Redirect to user profile.'
+                 value: '/welcome'
+               302Failure:
+                 description: 'Failed authentication. Redirect to login form.'
+                 value: '/login'
+
+
+
+ # M02: Posts
+ /welcome:
+  get:
+    operationId: R201
+    summary: 'R201: View main page'
+    description: 'Show the main page. Access: PUB'
+    tags:
+      - 'M02: Posts'
+    responses:
+      '200':
+        description: 'Ok. Show [UI01](https://git.fe.up.pt/lbaw/lbaw2324/lbaw2331/-/wikis/uploads/d5e82533d57061229eb6945830db73fb/image.png)'
+      '400':
+        description: 'Bad Request.'
+
+ /welcome/post/{id_recentNews}:
+  get:
+    operationId: R202
+    summary: 'R202: View recent news'
+    description: 'Show the most recent news. Access: PUB'
+    tags:
+      - 'M02: Posts'
+    parameters:
+        - in: path
+          name: id_recentNews
+          schema:
+            type: string
+          description: 'Specifies the number of the recentNews id for the query'
+          required: true
+    responses:
+      '200':
+        description: 'Ok. Show the most recent news.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+      '400':
+        description: 'Bad Request.'
+
+ /welcome/newsbytopic/{id}:
+  get:
+    operationId: R203
+    summary: 'R203: View news by a topic'
+    description: 'Show the news related to a certain topic. Access: PUB'
+    tags:
+      - 'M02: Posts'
+  
+  parameters:
+    - in: path
+      name: id
+      schema:
+        type: integer
+      description: 'The id of that certain topic for the query.'
+      required: true
+  responses:
+    '200':
+      description: 'Show the news related to a certain topic.'
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Post'
+    '400':
+      description: 'Bad Request.'
+
+ /welcome/post/{id_topNews}:
+  get:
+    operationId: R204
+    summary: 'R204: View top news'
+    description: 'Show the news with the popularity. Access: PUB'
+    tags:
+      - 'M02: Posts'
+    parameters:
+      - in: path
+        name: id_topNews
+        schema:
+          type: string
+        description: 'Specifies the number of the topNews id for the query'
+        required: true
+    responses:
+      '200':
+        description: 'Show the news with the most popularity.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+      '400':
+        description: 'Bad Request.'
+
+ /welcome/search/: 
+  get: 
+    operationId: R204
+    summary: 'R204: Search for an article'
+    description: 'Allows a website user to search for a post. Access: PUB'
+    tags:
+      - 'M02: Posts'
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+            required:
+              - query
+    responses:
+      '302':
+        description: 'Redirect after processing the query.'
+        headers:
+          Location:
+            schema:
+              type: string
+            examples:
+              302Success:
+                description: 'Successful search. Redirect to search results page.'
+                value: '/welcome/search/{query}'
+      '400':
+        description: 'Bad Request.'
+
+ /welcome/sidebar:
+  get:
+    operationId: R205
+    summary: 'R205: Show sidebar'
+    description: 'Shows the sidebar on the welcome page. Access: PUB'
+    tags:
+      - 'M02: Posts'
+    responses:
+      '200':
+        description: 'Shows the sidebar.'
+      '400':
+        description: 'Bad Request.'
+    
+ /welcome/post/{id_post}/comment/{id_comment}:
+  get:
+    operationId: R206
+    summary: 'R206: Show comment of a post'
+    description: 'Shows the comment of a post. Access: USR'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post
+      schema:
+        type: integer
+      description: 'The id of the post for the query.'
+      required: true
+    - in: path
+      name: id_comment
+      schema:
+        type: integer
+      description: 'The id of the comment for the query.'
+      required: true
+  responses:
+    '200':
+      description: 'Show the comments of that post.'
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Comment'
+    '400':
+      description: 'Bad Request.'
+    '403':
+        description: 'Forbidden access.'
+  post:
+    operationId: R207
+    summary: 'R207: Create a comment on a post'
+    description: 'Creates a comment on that post. Access: USR'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post
+      schema:
+        type: integer
+      description: 'The id of the post for the query.'
+      required: true
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+            required:
+              - body
+    responses:
+      '200':
+        description: 'Comment created and added successfully.'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+      '404':
+        description: 'Post not found.'
+  delete:
+    operationId: R208
+    summary: 'R208: Delete a comment on a post'
+    description: 'Delete a comment on that post. Access: OWN, ADM'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post
+      schema:
+        type: integer
+      description: 'The id of the post for the query.'
+      required: true
+    - in: path
+      name: id_comment
+      schema:
+        type: integer
+      description: 'The id of the comment for the query.'
+      required: true
+    responses:
+      '200':
+        description: 'Comment deleted successfully.'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+      '404':
+        description: 'Post not found.'
+
+ /welcome/post/{id_post}:
+  post:
+    operationId: R209
+    summary: 'R209: Upvote or Downvote a post'
+    description: 'Allows a member to rate a post. Access: USR'
+    tags:
+      - 'M02: Posts'
+    parameters:
+      - in: path
+        name: id_post
+        schema:
+          type: integer
+        description: 'The id of the post for the query.'
+        required: true
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/Vote'
+    responses:
+      '200':
+        description: 'Rated post successfully.'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+      '404':
+        description: 'Post not found.'
+
+
+ /welcome/createpost/:
+  post:
+    operationId: R210
+    summary: 'R210: Create a post'
+    description: 'Creates a post. Access: USR'
+    tags:
+      - 'M02: Posts'
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/Post'
+    responses:
+      '200':
+        description: 'Post created successfully.'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+    
+ /welcome/post/{id_post1}:
+  delete:
+    operationId: R211
+    summary: 'R211: Delete a post'
+    description: 'Deletes a post. Access: OWN, ADM'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post1
+      schema:
+        type: integer
+      description: 'The id of the post to be deleted.'
+      required: true
+    responses:
+      '302':
+        description: 'Redirect after updating the post content.'
+        headers:
+          Location:
+            schema:
+              type: string
+            examples:
+              302Success:
+                description: 'Successfulty deleted. Redirect to previous page.'
+              302Error:
+                description: 'Failed to delete. Redirect to previous page.'
+  patch:
+    operationId: R212
+    summary: 'R212: Edit a post'
+    description: 'Edits a post. Access: OWN'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post1
+      schema:
+        type: integer
+      description: 'The id of the post to be deleted.'
+      required: true
+    responses:
+      '200':
+        description: 'Post edited successfully.'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+      '404':
+        description: 'Post not found.'
+  post:
+    operationId: R213
+    summary: 'R213: Insert a topic to a post'
+    description: 'Inserts a topic to a post. Access: OWN'
+    tags:
+      - 'M02: Posts'
+    parameters:
+    - in: path
+      name: id_post1
+      schema:
+        type: integer
+      description: 'The id of the post to be deleted.'
+      required: true
+    requestBody:
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/Topic'
+    responses:
+      '200':
+        description: 'Topic inserted successfully.'
+      '400':
+        description: 'Bad Request.'
+      '403':
+        description: 'Forbidden access.'
+      '404':
+        description: 'Post not found.'
+
+
+# M03: Members
+ /profile/{id}:
+  get:
+    operationId: R301
+    summary: 'R301: View user profile'
+    description: 'Show the individual user profile. Access: USR'
+    tags:
+      - 'M03: Members'
+    parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+    responses:
+        '200':
+          description: 'Ok. Show User Profile UI'
+        '400':
+          description: 'Bad Request.'
+  patch:
+    operationId: R302
+    summary: 'R302: Edit user profile'
+    description: "Edits the user's profile. Access: OWN"
+    tags:
+      - 'M03: Members'
+    parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+    responses:
+        '200':
+          description: 'User profile edited successfully.'
+        '400':
+          description: 'Bad Request.'
+        '403':
+          description: 'Forbidden access.'
+        '404':
+          description: 'Post not found.'
+    
+
+
+ #M04: Notifications
+ /profile/{id_user}/notifications:
+    post:
+      operationId: R401
+      summary: "R401: Get user's notifications"
+      description: "Returns all user's notifications. Access: USR"
+      tags:
+        - 'M04: Notifications'
+      parameters:
+        - in: path
+          name: id_user
+          schema:
+            type: integer
+          description: 'The id of the user.'
+          required: true
+      responses:
+        '200':
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '400':
+          description: 'Bad Request.'
+        '403':
+          description: 'Forbidden access.'
+        '404':
+          description: 'Notification not found.'
+
+
+ #M05: Management Area
+ /userManagement:
+  get:
+    operationId: R501
+    summary: 'R501: Show User Management page'
+    description: 'Shows the user management page. Access: ADM'
+    tags:
+      - 'M05: Management Area'
+    responses:
+      '200':
+        description: 'Show user management page successfully'
+      '400':
+        description: 'Bad Request'
+      '403':
+        description: 'Forbidden access'
+      '404':
+        description: 'Page Not Found'
+        
+
+ #M06: Static Pages
+ /welcome/about:
+    get:
+      operationId: R601
+      summary: 'R601: About Us page'
+      description: 'Show about us page. Access: PUB'
+      tags:
+        - 'M06: Static Pages'
+      responses:
+        '200':
+          description: 'Show About page.'
+        '400':
+          description: 'Bad Request.'
+
+
+
+components:
+  schemas:
+    Topic:
+        type: object
+        properties:
+          id:
+            type: integer
+          title:
+            type: string
+          description:
+            type: string
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        date_time:
+          type: string
+          format: date-time
+        id_post:
+          type: integer
+        id_user:
+          type: integer
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        reputation:
+          type: integer
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        date_time:
+          type: string
+          format: date-time
+        popularity:
+          type: integer
+        id_user:
+          type: integer
+        id_topic:
+          type: integer
+    Vote:
+      type: object
+      properties:
+        id:
+          type: integer
+        rating:
+          type: integer
+        id_post:
+          type: integer
+        id_user:
+          type: integer
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        date_time:
+          type: string
+          format: date-time
+        type:
+          type: string
